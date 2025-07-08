@@ -1,22 +1,30 @@
-# Utilise une image officielle Python légère
+# Utilise une image Python légère
 FROM python:3.11-slim
 
-# Définit le dossier de travail dans le container
+# Installer les dépendances système nécessaires
+RUN apt-get update && apt-get install -y \
+    gcc \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Définir le dossier de travail
 WORKDIR /app
 
-# Copier les fichiers requirements et .env dans le container
+# Copier les fichiers
 COPY requirements.txt ./
 COPY .env ./
+COPY ./app ./app
+COPY ./chatbot_dialogflow_key.json ./chatbot_dialogflow_key.json
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier tout le code de l’application dans le container
-COPY ./app ./app
-COPY ./chatbot_dialogflow_key.json ./chatbot_dialogflow_key.json
+# Télécharger le modèle spaCy en français
+RUN python -m spacy download fr_core_news_md
 
-# Expose le port 8000 (port par défaut pour uvicorn)
+# Exposer le port pour uvicorn
 EXPOSE 8000
 
-# Commande pour lancer le serveur FastAPI avec uvicorn
+# Lancer l'application FastAPI avec uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

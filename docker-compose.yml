@@ -9,7 +9,7 @@ services:
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/chatbot_dialogflow_key.json
       - DIALOGFLOW_PROJECT_ID=chatbot-reclamation-fsi-grpn
-      - DATABASE_URL=postgresql://postgres:14774368@localhost:5432/fsi
+      - DATABASE_URL=postgresql://postgres:14774368@db:5432/fsi
     volumes:
       - ./:/app
     depends_on:
