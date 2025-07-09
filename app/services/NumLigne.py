@@ -23,7 +23,7 @@ async def handle_verifier_ligne(data: dict, db: Session) -> dict:
         query2 = text(
             "SELECT id_facture, montant, date_emission, statut_paiement "
             "FROM facture WHERE num_ligne = :numero "
-            "ORDER BY date_emission DESC LIMIT 1"
+            "ORDER BY date_emission DESC LIMIT 3"
         )
 
         result = db.execute(query, {"numero": numero}).fetchone()

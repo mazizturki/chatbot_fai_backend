@@ -40,14 +40,13 @@ class Facture(Base):
 class Reclamation(Base):
     __tablename__ = "reclamation"
     
-    id_reclamation = Column(String(15), primary_key=True)
+    id_reclamation = Column(String, primary_key=True)
     num_ligne = Column(String(10), ForeignKey("lignetelephonique.num_ligne"))
     date_reclamation = Column(TIMESTAMP)
     type_probleme = Column(String(100))
     etat = Column(String(20))
-    
+    num_tel = Column(String(12))
     ligne = relationship("LigneTelephonique", back_populates="reclamations")
-    dialogues = relationship("HistoriqueDialogue", back_populates="reclamation")
 
 class HistoriqueDialogue(Base):
     __tablename__ = "historiquedialogue"
@@ -57,5 +56,3 @@ class HistoriqueDialogue(Base):
     message_utilisateur = Column(Text)
     reponse_chatbot = Column(Text)
     timestamp = Column(TIMESTAMP)
-    
-    reclamation = relationship("Reclamation", back_populates="dialogues")

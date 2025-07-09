@@ -20,3 +20,9 @@ def verifier_statut_ligne(db: Session, num: str) -> str:
     if not ligne:
         return "inexistant"
     return ligne.etat.lower()
+
+def get_debit_attendu(db: Session, num: str) -> float | None:
+    ligne = get_ligne(db, num)
+    if ligne:
+        return ligne.debit_internet
+    return None

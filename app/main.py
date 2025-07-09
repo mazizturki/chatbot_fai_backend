@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.auth.jwt_handler import create_jwt_token, decode_jwt_token
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.config import DIALOGFLOW_PROJECT_ID
+from google.protobuf.json_format import MessageToDict
 from app.database.session import get_db
 from app.services.NumTel import handle_fournir_num_tel
 from app.services.ProblemeConnexion import handle_probleme_connexion
@@ -12,6 +13,8 @@ from app.services.FinDiscussion import handle_fin_discussion
 from google.cloud import dialogflow_v2 as dialogflow
 from app.core.session_memory import clear_session
 from app.services.MarqueModem import handle_demander_marque_modem
+from app.services.EtatModem import handle_demander_etat_modem
+
 # app/main.py
 app = FastAPI()
 security = HTTPBearer()
@@ -61,6 +64,7 @@ intent_handlers = {
     "FournirNumTel": handle_fournir_num_tel,
     "FinDiscussion": handle_fin_discussion,
     "FournirMarqueModem": handle_demander_marque_modem,
+    "EtatVoyantModem": handle_demander_etat_modem,
 }
 
 @app.post("/chat")
@@ -73,16 +77,20 @@ async def chat(query: Query,
         result = detect_intent(DIALOGFLOW_PROJECT_ID, session_id, query.text)
         intent_name = result.intent.display_name
 
+        # Convert MapComposite en dict Python natif
+        params_dict = dict(result.parameters)
+    
+        # Log pour débogage
+        print(f"Session ID : {session_id}")
         print(f"Texte reçu : {query.text}")
-        print(f"Session : {session_id}")
         print(f"Intent détecté : {intent_name}")
-        print(f"Paramètres détectés : {result.parameters}")
+        print(f"Paramètres détectés : {params_dict}")
 
         handler = intent_handlers.get(intent_name)
         if handler:
             data = {
                 "queryResult": {
-                    "parameters": result.parameters,
+                    "parameters": params_dict,
                     "intent": {
                         "displayName": intent_name
                     },

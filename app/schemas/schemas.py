@@ -53,7 +53,7 @@ class Facture(FactureBase):
 # ===== RÉCLAMATION =====
 class ReclamationBase(BaseModel):
     type_probleme: Optional[str] = Field(None, max_length=100)
-    etat: Optional[str] = Field(None, regex="^(en cours|résolue)$")
+    etat: Optional[str] = Field(None, regex="^(en cours|en attente|résolue)$")
 
 class ReclamationCreate(ReclamationBase):
     num_ligne: str
@@ -61,6 +61,7 @@ class ReclamationCreate(ReclamationBase):
 class Reclamation(ReclamationBase):
     id_reclamation: str
     num_ligne: str
+    num_tel: str
     date_reclamation: datetime
     
     class Config:
