@@ -31,12 +31,13 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
             probleme="coupure (voyant ADSL clignote)"
         )
         return {
-            "fulfillmentText": "Le voyant ADSL clignote. Une réclamation a été enregistrée pour une coupure de service.",
+            "fulfillmentText": "Le voyant ADSL clignote suite à un probleme de synchronisation. Une réclamation a été enregistrée pour une coupure de service.\n \n"
+            "Nous restons à votre disposition pour toute autre demande. \n" "Excellente journée à vous.",
             "endConversation": True
         }
 
-    # Cas 2 : Voyant rouge → redémarrage manuel, on attend la réponse utilisateur
-    if voyant.lower() == "rouge" and (etat.lower() == "éteint" or couleur.lower() == "rouge"):
+    # Cas 2 : Voyant Internet rouge → redémarrage manuel, on attend la réponse utilisateur
+    if voyant.lower() == "internet" and (etat.lower() == "eteint" or couleur.lower() == "rouge"):
         return {
             "fulfillmentText": (
                 "Veuillez effectuer un redémarrage de votre modem en insérant un trombone dans le bouton RESET. "
@@ -54,6 +55,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
         probleme="coupure (état du voyant inconnu)"
     )
     return {
-        "fulfillmentText": "Une réclamation a été enregistrée. Nous vous contacterons dans les plus brefs délais.",
+        "fulfillmentText": "Une réclamation a été enregistrée. Nous vous contacterons dans les plus brefs délais. \n \n"
+        "Nous restons à votre disposition pour toute autre demande. \n" "Excellente journée à vous.",
         "endConversation": True
     }

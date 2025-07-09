@@ -14,6 +14,8 @@ from google.cloud import dialogflow_v2 as dialogflow
 from app.core.session_memory import clear_session
 from app.services.MarqueModem import handle_demander_marque_modem
 from app.services.EtatModem import handle_demander_etat_modem
+from app.services.ServiceCommercial import handle_service_commercial
+from app.services.confirmation_redemarrage import handle_confirmation_redemarrage
 
 # app/main.py
 app = FastAPI()
@@ -65,6 +67,8 @@ intent_handlers = {
     "FinDiscussion": handle_fin_discussion,
     "FournirMarqueModem": handle_demander_marque_modem,
     "EtatVoyantModem": handle_demander_etat_modem,
+    "ConfirmationRedemarrage": handle_confirmation_redemarrage,
+    "ServiceCommercial": handle_service_commercial,
 }
 
 @app.post("/chat")
@@ -100,15 +104,17 @@ async def chat(query: Query,
             }
             response = await handler(data, db)
 
-            # Nettoyage mémoire si fin de discussion
-            if response.get("endConversation") is True:
-                clear_session(session_id)
-
             return {
                 "fulfillmentText": response.get("fulfillmentText", "Pas de réponse."),
                 "options": response.get("options", []),
                 "endConversation": response.get("endConversation", False)
             }
+        
+        # ✅ Puis on efface la session si nécessaire (mais après avoir construit la réponse !)
+            if reply["endConversation"]:
+                clear_session(session_id)
+
+            return reply
 
         else:
             return {"fulfillmentText": result.fulfillment_text}

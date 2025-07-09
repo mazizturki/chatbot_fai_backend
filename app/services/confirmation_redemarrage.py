@@ -6,7 +6,7 @@ async def handle_confirmation_redemarrage(data: dict, db: Session) -> dict:
     session_id = data.get("session")
     parameters = data["queryResult"].get("parameters", {})
 
-    confirmation = parameters.get("confirmation", "").lower()
+    confirmation = parameters.get("reponseYN", "").lower()
 
     if confirmation in ["oui", "yes", "ok", "d'accord"]:
         return {
@@ -15,7 +15,7 @@ async def handle_confirmation_redemarrage(data: dict, db: Session) -> dict:
         }
 
     elif confirmation in ["non", "toujours", "pas résolu"]:
-        await creer_reclamation(
+        creer_reclamation(
             db=db,
             numligne=get_param(session_id, "numligne"),
             numtel=get_param(session_id, "numtel"),
