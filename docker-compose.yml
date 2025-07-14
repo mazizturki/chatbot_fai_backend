@@ -2,31 +2,37 @@ version: '3.8'
 
 services:
   backend:
-    build: .
+    build:
+      context: .
     container_name: chatbot-fsi-backend
     ports:
       - "8000:8000"
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/chatbot_dialogflow_key.json
-      - DIALOGFLOW_PROJECT_ID=chatbot-reclamation-fsi-grpn
-      - DATABASE_URL=postgresql://postgres:14774368@db:5432/fsi
+    env_file:
+      - .env
     volumes:
       - ./:/app
     depends_on:
       - db
+    restart: unless-stopped
+    networks:
+      - chatbot-network
 
   db:
     image: postgres:15
     container_name: chatbot-fsi-db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 14774368
-      POSTGRES_DB: fsi
+    restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - chatbot-network
 
 volumes:
   pgdata:
+
+networks:
+  chatbot-network:
+    driver: bridge

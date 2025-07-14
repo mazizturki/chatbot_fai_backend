@@ -25,3 +25,7 @@ def extract_param(params: dict, key: str, session_id: str) -> str:
         store_param(session_id, key, value)
 
     return value
+
+def extract_session_id(data: dict) -> str:
+    raw = data.get("session")
+    return raw.split("/")[-1] if raw and "/" in raw else raw

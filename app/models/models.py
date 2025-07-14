@@ -46,6 +46,7 @@ class Reclamation(Base):
     type_probleme = Column(String(100))
     etat = Column(String(20))
     num_tel = Column(String(12))
+    marque_modem = Column(String(50), nullable=True)
     ligne = relationship("LigneTelephonique", back_populates="reclamations")
 
 class HistoriqueDialogue(Base):

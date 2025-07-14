@@ -1,43 +1,53 @@
 from sqlalchemy.orm import Session
-from app.core.session_memory import store_param, get_param
+from app.core.session_memory import store_param, get_param, get_progression, update_progression
 from app.services.Diagnostique import diagnostic_probleme
+from app.utils.extract import extract_session_id
 
 async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
     print("handle_demander_marque_modem called with data:", data)
-    session_id = data.get("session")
+    
+    session_id = extract_session_id(data)
     parameters = dict(data["queryResult"]["parameters"])
     query_text = data["queryResult"].get("queryText", "").lower()
     
-    # Récupérer la marque modem
+    # Vérifier si la progression est déjà faite
+    progression = get_progression(session_id)
+    if progression.get("marque_ok"):
+        return {
+            "fulfillmentText": "Merci, nous avons déjà enregistré la marque de votre modem. Poursuivons avec la suite du diagnostic.",
+            "endConversation": False
+        }
+
+    # Récupération marque
     marque = parameters.get("marque_modem") or query_text
-    print(f"Marque détectée : {marque}")
+    print(f"[DEBUG] Marque détectée : {marque}")
 
     valid_marques = ["huawei", "tplink", "nokia", "zte", "cisco", "motorola"]
 
     if marque and marque.lower() in valid_marques:
-        # Stocker la marque
         store_param(session_id, "marque_modem", marque)
+        update_progression(session_id, "marque_ok", True)
 
-        # Vérifier si on a toutes les infos pour faire un diagnostic
+        # Vérifier si tous les autres paramètres sont prêts
         type_probleme = get_param(session_id, "TypeProbleme")
         numligne = get_param(session_id, "numligne")
         numtel = get_param(session_id, "numtel")
 
+        print(f"[DEBUG] Diagnostic check - type_probleme: {type_probleme}, numligne: {numligne}, numtel: {numtel}")
+
+
         if type_probleme and numligne and numtel:
-            # Tous les paramètres sont présents, lancer le diagnostic
             return await diagnostic_probleme(session_id, db)
         else:
-            # Sinon, demander à l'utilisateur d'autres infos nécessaires
             return {
-                "fulfillmentText": f"Merci d'avoir indiqué que votre modem est un {marque}. Veuillez fournir les informations manquantes.",
-                "options": [],
+                "fulfillmentText": f"Merci, la marque {marque} a bien été enregistrée. Veuillez maintenant fournir les informations manquantes.",
                 "endConversation": False
             }
     else:
-        # Si la marque n'est pas reconnue, redemander
+        # Demander à nouveau la marque si elle n'est pas valide
         marques = ["Huawei", "TPLink", "Nokia", "ZTE", "Cisco", "Motorola"]
         return {
-            "fulfillmentText": "Quel est la marque de votre modem ?",
+            "fulfillmentText": "Pouvez-vous préciser la marque de votre modem ?",
             "options": marques,
             "endConversation": False
         }

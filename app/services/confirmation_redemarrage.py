@@ -1,9 +1,11 @@
 from sqlalchemy.orm import Session
 from app.core.session_memory import get_param
 from app.crud.reclamation import creer_reclamation
+from app.utils.extract import extract_session_id
 
 async def handle_confirmation_redemarrage(data: dict, db: Session) -> dict:
-    session_id = data.get("session")
+    session_id = extract_session_id(data)
+    print(f"[DEBUG handle_confirmation_redemarrage] session={session_id}, data={data}")
     parameters = data["queryResult"].get("parameters", {})
 
     confirmation = parameters.get("reponseYN", "").lower()
@@ -19,10 +21,14 @@ async def handle_confirmation_redemarrage(data: dict, db: Session) -> dict:
             db=db,
             numligne=get_param(session_id, "numligne"),
             numtel=get_param(session_id, "numtel"),
-            probleme="coupure persistante après redémarrage modem"
+            probleme="coupure persistante après reset modem",
+            marque_modem=get_param(session_id, "marque_modem")
         )
         return {
-            "fulfillmentText": "D'accord, une réclamation a été enregistrée. Un technicien vous contactera dans les plus brefs délais.",
+            "fulfillmentText": (
+                "D'accord, une réclamation a été enregistrée. Un technicien vous contactera dans les plus brefs délais.\n \n"
+                "Nous restons à votre disposition pour toute autre demande. \n" "Excellente journée à vous."
+            ),
             "endConversation": True
         }
 
