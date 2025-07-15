@@ -34,7 +34,7 @@ def test_chat_endpoint():
 
     # Override du handler et du detect_intent
     intent_handlers["ProblemeConnexion"] = fake_handler
-    app.detect_intent = fake_detect_intent  # Optionnel si tu veux patcher
+    app.detect_intent = fake_detect_intent  
 
     response = client.post(
         "/chat",

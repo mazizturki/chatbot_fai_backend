@@ -19,4 +19,3 @@ def detect_intent_with_params(session_id: str, text: str, language_code: str = "
     parameters = response.query_result.parameters
 
     return fulfillment_text, parameters
-

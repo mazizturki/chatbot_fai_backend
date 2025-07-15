@@ -72,7 +72,7 @@ async def diagnostic_probleme(session_id: str, db: Session) -> dict:
             }
 
         else:
-            creer_reclamation(
+            reclamation = creer_reclamation(
                 db=db,
                 numligne=numligne,
                 numtel=numtel,
@@ -85,7 +85,7 @@ async def diagnostic_probleme(session_id: str, db: Session) -> dict:
                     f"🔼 Débit montant : {upload_mbps:.2f} Mbps\n"
                     f"📡 Ping : {ping_ms} ms\n\n"
                     "❌ Le débit est largement en dessous de la normale.\n"
-                    "Une réclamation a été enregistrée. Notre équipe technique vous contactera sous peu.\n\n"
+                    f"Une réclamation a été enregistrée sous le numéro {reclamation.id_reclamation}. Notre équipe technique vous contactera sous peu.\n\n"
                     "Nous restons à votre disposition pour toute autre demande.\nExcellente journée à vous."
                 ),
                 "endConversation": True
@@ -104,7 +104,7 @@ async def diagnostic_probleme(session_id: str, db: Session) -> dict:
     # Autre cas → réclamation directe
     else:
         update_progression(session_id, "diagnostic_ok", True)
-        creer_reclamation(
+        reclamation = creer_reclamation(
             db=db,
             numligne=numligne,
             numtel=numtel,
@@ -113,7 +113,7 @@ async def diagnostic_probleme(session_id: str, db: Session) -> dict:
         )
         return {
             "fulfillmentText": (
-                f"Une réclamation pour le problème {type_probleme} a été enregistrée.\n\n"
+                f"Une réclamation pour le problème {type_probleme} a été enregistrée sous le numéro {reclamation.id_reclamation}.\n\n"
                 "Nous restons à votre disposition pour toute autre demande.\nExcellente journée à vous."
             ),
             "endConversation": True

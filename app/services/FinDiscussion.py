@@ -10,4 +10,3 @@ async def handle_fin_discussion(data: dict, db: Session):
         "fulfillmentText": "Merci pour votre temps. À bientôt !",
         "endConversation": True
     }
-

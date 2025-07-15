@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, Date, TIMESTAMP, ForeignKey, Text
+from sqlalchemy import Column, FetchedValue, Integer, String, Numeric, Date, TIMESTAMP, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.database.base import Base
 
@@ -39,8 +39,8 @@ class Facture(Base):
 
 class Reclamation(Base):
     __tablename__ = "reclamation"
-    
-    id_reclamation = Column(String, primary_key=True)
+
+    id_reclamation = Column(String, primary_key=True, server_default=FetchedValue())  
     num_ligne = Column(String(10), ForeignKey("lignetelephonique.num_ligne"))
     date_reclamation = Column(TIMESTAMP)
     type_probleme = Column(String(100))

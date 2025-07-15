@@ -17,7 +17,7 @@ async def handle_confirmation_redemarrage(data: dict, db: Session) -> dict:
         }
 
     elif confirmation in ["non", "toujours", "pas résolu"]:
-        creer_reclamation(
+        reclamation = creer_reclamation(
             db=db,
             numligne=get_param(session_id, "numligne"),
             numtel=get_param(session_id, "numtel"),
@@ -26,7 +26,7 @@ async def handle_confirmation_redemarrage(data: dict, db: Session) -> dict:
         )
         return {
             "fulfillmentText": (
-                "D'accord, une réclamation a été enregistrée. Un technicien vous contactera dans les plus brefs délais.\n \n"
+                f"D'accord, une réclamation a été enregistrée sous le numéro {reclamation.id_reclamation}. Un technicien vous contactera dans les plus brefs délais.\n \n"
                 "Nous restons à votre disposition pour toute autre demande. \n" "Excellente journée à vous."
             ),
             "endConversation": True

@@ -29,7 +29,6 @@ async def handle_probleme_connexion(data: dict, db: Session) -> Dict:
     if date_probleme:
         store_param(session_id, "date", date_probleme)
 
-    # En haut du handler, après extraction
     if progression.get("probleme_ok") and type_probleme:
         ancien_probleme = get_param(session_id, "TypeProbleme")
         if ancien_probleme != type_probleme:

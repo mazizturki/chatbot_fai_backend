@@ -31,7 +31,7 @@ async def handle_service_commercial(data: dict, db: Session) -> dict:
             "fulfillmentText": (
                 "Votre demande semble concerner le service commercial. "
                 "Pour toute question relative à la facturation, aux offres ou à votre contrat, contactez notre service commercial "
-                "au 1120, puis tapez 1."
+                "au 1298 ou le 71001298, puis tapez 3. Merci de votre compréhension."
             ),
             "endConversation": True
         }

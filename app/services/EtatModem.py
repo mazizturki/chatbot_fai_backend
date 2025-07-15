@@ -10,7 +10,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
     progression = get_progression(session_id)
     if progression.get("etat_ok"):
         return {
-            "fulfillmentText": "Nous avons déjà enregistré l’état du modem. Passons à l'étape suivante.",
+            "fulfillmentText": "Nous avons déjà enregistré l’état du modem.",
             "endConversation": False
         }
 
@@ -34,14 +34,12 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
     if not any([voyant, couleur, etat]):
         return {
             "fulfillmentText": (
-                "Merci de m’indiquer l’état des voyants de votre modem. "
-                "Par exemple : le voyant ADSL clignote, ou Internet est rouge."
+                "Merci de m’indiquer l’état des voyants de votre modem."
             ),
             "options": [
                 "Le voyant ADSL clignote",
                 "Le voyant Internet est rouge",
                 "Le voyant Internet est éteint",
-                "Tous les voyants sont allumés"
             ],
             "endConversation": False
         }
@@ -54,7 +52,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
     # ✅ Cas 1 : Voyant ADSL clignote → réclamation immédiate
     if "adsl" in voyant and "clignote" in etat:
         update_progression(session_id, "etat_ok", True)
-        creer_reclamation(
+        reclamation = creer_reclamation(
             db=db,
             numligne=num_ligne,
             numtel=num_tel,
@@ -64,7 +62,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
         return {
             "fulfillmentText": (
                 "Les voyants indiquent une 🔌 Perte de synchronisation DSL. "
-                "Une réclamation a été enregistrée.\n\n"
+                f"Une réclamation a été enregistrée sous le numéro {reclamation.id_reclamation}.\n\n"
                 "Nous restons à votre disposition pour toute autre demande. Excellente journée à vous."
             ),
             "endConversation": True
@@ -87,7 +85,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
         ("internet" in voyant and ("rouge" in couleur or "eteint" in etat))
     ):
         update_progression(session_id, "etat_ok", True)
-        creer_reclamation(
+        reclamation = creer_reclamation(
             db=db,
             numligne=num_ligne,
             numtel=num_tel,
@@ -97,7 +95,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
         return {
             "fulfillmentText": (
                 "Les voyants indiquent une 🔌 Perte de synchronisation DSL. "
-                "Une réclamation urgente a été enregistrée auprès de notre service technique.\n\n"
+                f"Une réclamation a été enregistrée auprès de notre service technique sous le numéro {reclamation.id_reclamation}.\n\n"
                 "Nous vous contacterons dans les plus brefs délais. Excellente journée à vous."
             ),
             "endConversation": True
@@ -105,7 +103,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
     
     # 🟠 Cas inconnu ou non critique → réclamation par défaut
     update_progression(session_id, "etat_ok", True)
-    creer_reclamation(
+    reclamation = creer_reclamation(
         db=db,
         numligne=num_ligne,
         numtel=num_tel,
@@ -115,7 +113,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
     return {
         "fulfillmentText": (
             "Nous n’avons pas pu interpréter précisément l’état des voyants. "
-            "Par précaution, une réclamation a été enregistrée.\n\n"
+            f"Par précaution, une réclamation a été enregistrée sous le numéro {reclamation.id_reclamation}.\n\n"
             "Nous restons à votre disposition pour toute autre demande. Excellente journée à vous."
         ),
         "endConversation": True

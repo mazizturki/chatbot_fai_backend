@@ -31,7 +31,7 @@ async def handle_fournir_num_tel(data: dict, db: Session) -> dict:
         return await handle_demander_marque_modem(data, db)
     else:
         return {
-            "fulfillmentText": "Veuillez fournir un numéro de téléphone valide (au moins 8 chiffres).",
+            "fulfillmentText": "Veuillez fournir un numéro de téléphone valide.",
             "options": [],
             "endConversation": False
         }

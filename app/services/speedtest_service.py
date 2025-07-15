@@ -27,7 +27,7 @@ async def run_speedtest(numligne: str, db: Session) -> dict:
         return {
             "download": download_mbps,
             "upload": upload_mbps,
-            "ping": ping,
+            "ping": round(ping, 0),
             "debit_attendu": debit_attendu
         }
 

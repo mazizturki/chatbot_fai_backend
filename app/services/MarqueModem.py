@@ -22,10 +22,10 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
     marque = parameters.get("marque_modem") or query_text
     print(f"[DEBUG] Marque détectée : {marque}")
 
-    valid_marques = ["huawei", "tplink", "nokia", "zte", "cisco", "motorola"]
+    valid_marques = ["huawei", "tplink", "nokia", "zte", "cisco", "sagemcom", "netgear", "asus", "dlink"]
 
     if marque and marque.lower() in valid_marques:
-        store_param(session_id, "marque_modem", marque)
+        store_param(session_id, "marque_modem", marque.capitalize())
         update_progression(session_id, "marque_ok", True)
 
         # Vérifier si tous les autres paramètres sont prêts
@@ -45,7 +45,7 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
             }
     else:
         # Demander à nouveau la marque si elle n'est pas valide
-        marques = ["Huawei", "TPLink", "Nokia", "ZTE", "Cisco", "Motorola"]
+        marques = ["Huawei", "TPLink", "Nokia", "ZTE", "Cisco", "Sagemcom", "Netgear", "Asus", "D-Link"]
         return {
             "fulfillmentText": "Pouvez-vous préciser la marque de votre modem ?",
             "options": marques,

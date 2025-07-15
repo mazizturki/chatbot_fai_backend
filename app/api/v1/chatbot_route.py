@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, Depends
 from sqlalchemy.orm import Session
 from app.services.dialogflow_sdk import detect_intent_with_params
 from app.services.ProblemeConnexion import handle_probleme_connexion
-from app.database import get_db  # Assure-toi que get_db est bien défini
+from app.database import get_db
 
 router = APIRouter()
 
