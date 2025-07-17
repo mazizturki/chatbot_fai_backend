@@ -74,17 +74,13 @@ intent_handlers = {
 @app.post("/chat")
 async def chat(query: Query, 
                db: Session = Depends(get_db), 
-               payload: dict = Depends(verify_jwt_token)
-               ):
+               payload: dict = Depends(verify_jwt_token)):
     try:
-        session_id = payload.get("jti")  # ID sécurisé du JWT
+        session_id = payload.get("jti")
         result = detect_intent(DIALOGFLOW_PROJECT_ID, session_id, query.text)
         intent_name = result.intent.display_name
-
-        # Convert MapComposite en dict Python natif
         params_dict = dict(result.parameters)
-    
-        # Log pour débogage
+
         print(f"Session ID : {session_id}")
         print(f"Texte reçu : {query.text}")
         print(f"Intent détecté : {intent_name}")
@@ -103,21 +99,15 @@ async def chat(query: Query,
                 "session": session_id
             }
             response = await handler(data, db)
-
-            return {
+            reply = {
                 "fulfillmentText": response.get("fulfillmentText", "Pas de réponse."),
                 "options": response.get("options", []),
                 "endConversation": response.get("endConversation", False)
             }
-        
-        # ✅ Puis on efface la session si nécessaire (mais après avoir construit la réponse !)
             if reply["endConversation"]:
                 clear_session(session_id)
-
             return reply
-
         else:
             return {"fulfillmentText": result.fulfillment_text}
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
