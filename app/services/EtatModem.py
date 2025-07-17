@@ -7,7 +7,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
     session_id = extract_session_id(data)
     parameters = data["queryResult"].get("parameters", {})
 
-    # Vérifier si le diagnostic est déjà effectué
+    # Vérifier si le diagnostic a déjà été effectué
     progression = get_progression(session_id)
     if progression.get("etat_ok"):
         return {
@@ -15,7 +15,7 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
             "endConversation": False
         }
 
-    # Vérifier les paramètres requis
+    # Récupération des informations nécessaires
     num_ligne = get_param(session_id, "numligne")
     num_tel = get_param(session_id, "numtel")
     marque = get_param(session_id, "marque_modem")
@@ -26,19 +26,19 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
             "endConversation": False
         }
 
-    # Extraire les informations des voyants
+    # Extraction des paramètres envoyés par Dialogflow
     voyant = extract_param(parameters, "VoyantModem", session_id) or ""
     couleur = extract_param(parameters, "CouleurVoyant", session_id) or ""
-    etat = extract_param(parameters, "EtatVoyant", session_id) or ""
+    etat = extract_param(parameters, "etatvoyant", session_id) or ""
 
     print(f"[DEBUG Voyants] session={session_id} | Voyant={voyant}, Couleur={couleur}, État={etat}")
 
-    # Normalisation
+    # Normalisation des valeurs
     voyant = voyant.lower()
     couleur = couleur.lower()
     etat = etat.lower()
 
-    # Cas 1 : Aucune info détectée → poser la question
+    # Cas 1 : Aucune information détectée
     if not any([voyant, couleur, etat]):
         return {
             "fulfillmentText": "Merci de m’indiquer l’état des voyants de votre modem.",
@@ -46,13 +46,14 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
                 "Le voyant ADSL clignote",
                 "Le voyant Internet est rouge",
                 "Le voyant Internet est éteint",
-                "Le voyant Wi-Fi est éteint",
+                "Le voyant WLAN est éteint",
+                "Tous les voyants sont allumés",
                 "Tous les voyants sont éteints"
             ],
             "endConversation": False
         }
 
-    # Cas 2 : Voyant ADSL clignote → réclamation immédiate
+    # Cas 2 : ADSL clignote → réclamation immédiate
     if voyant == "adsl" and etat == "clignote":
         update_progression(session_id, "etat_ok", True)
         reclamation = creer_reclamation(
@@ -71,8 +72,8 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
             "endConversation": True
         }
 
-    # Cas 3 : Internet rouge ou éteint → demander redémarrage
-    if voyant == "internet" and (couleur == "rouge" or etat == "eteint"):
+    # Cas 3 : Internet rouge ou éteint → redémarrage demandé
+    if voyant == "internet" and (couleur == "rouge" or etat == "éteint"):
         return {
             "fulfillmentText": (
                 "Veuillez effectuer un redémarrage de votre modem en insérant un trombone dans le bouton RESET. "
@@ -82,19 +83,19 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
             "endConversation": False
         }
 
-    # Cas 4 : Voyant Wi-Fi éteint → problème potentiel de Wi-Fi
-    if voyant == "wlan" and (couleur == "éteint" or etat == "éteint"):
+    # Cas 4 : Wi-Fi éteint → vérifier activation du Wi-Fi
+    if voyant == "wlan" and etat == "éteint":
         return {
             "fulfillmentText": (
-                "Le voyant Wi-Fi semble indiquer un problème de réseau sans fil. "
-                "Veuillez vérifier si Monk-0-le Wi-Fi est activé sur votre modem ou redémarrez-le. "
-                "Le problème persiste-t-il ?"
+                "Le voyant WLAN semble indiquer un problème de réseau sans fil. "
+                "Veuillez vérifier si le Wi-Fi est activé sur votre modem ou redémarrez-le. "
+                "Est-ce que le problème est résolu ?"
             ),
             "options": ["Oui", "Non"],
             "endConversation": False
         }
 
-    # Cas 5 : Voyant normal (Internet vert et stable)
+    # Cas 5 : Internet vert et stable → tout est normal
     if voyant == "internet" and couleur == "vert" and etat == "stable":
         update_progression(session_id, "etat_ok", True)
         return {
@@ -106,19 +107,19 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
             "endConversation": True
         }
 
-    # Cas 6 : Tous les voyants éteints → problème d’alimentation
+    # Cas 6 : Tous les voyants sont éteints → problème d’alimentation
     if etat == "éteint" and not voyant:
         return {
             "fulfillmentText": (
                 "Il semble que votre modem ne soit pas alimenté. "
                 "Veuillez vérifier que le câble d’alimentation est bien branché et que le modem est sous tension. "
-                "Le problème persiste-t-il ?"
+                "Est-ce que le problème est résolu ?"
             ),
             "options": ["Oui", "Non"],
             "endConversation": False
         }
 
-    # Cas par défaut : État inconnu ou non critique → réclamation
+    # Cas par défaut : État non interprétable → créer réclamation par précaution
     update_progression(session_id, "etat_ok", True)
     reclamation = creer_reclamation(
         db=db,

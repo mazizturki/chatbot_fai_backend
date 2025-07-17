@@ -43,10 +43,10 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
     marques_affichables = list(marque_mapping.values())
 
     # Récupération de la marque
-    marque = parameters.get("marque_modem")
+    marque = parameters.get("marque_modem") or parameters.get("marque")
     if not marque:
         return {
-            "fulfillmentText": "Veuillez préciser la marque de votre modem.",
+            "fulfillmentText": "Pour mieux vous aider, Veuillez choisir la marque de votre modem.",
             "options": marques_affichables,
             "endConversation": False
         }

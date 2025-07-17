@@ -21,12 +21,12 @@ async def handle_confirmation_redemarrage(data: dict, db: Session) -> dict:
             db=db,
             numligne=get_param(session_id, "numligne"),
             numtel=get_param(session_id, "numtel"),
-            probleme="coupure persistante après reset modem",
+            probleme=get_param(session_id, "TypeProbleme"),
             marque_modem=get_param(session_id, "marque_modem")
         )
         return {
             "fulfillmentText": (
-                f"D'accord, une réclamation a été enregistrée sous le numéro {reclamation.id_reclamation}. Un technicien vous contactera dans les plus brefs délais.\n \n"
+                f"D'accord, une réclamation a été enregistrée sous le numéro {reclamation.id_reclamation}. Un expert vous contactera dans les plus brefs délais.\n \n"
                 "Nous restons à votre disposition pour toute autre demande. \n" "Excellente journée à vous."
             ),
             "endConversation": True
@@ -34,7 +34,7 @@ async def handle_confirmation_redemarrage(data: dict, db: Session) -> dict:
 
     # Si la réponse est ambiguë
     return {
-        "fulfillmentText": "Je n’ai pas compris votre réponse. Le problème est-il résolu après le redémarrage du modem ?",
+        "fulfillmentText": "Je n’ai pas compris votre réponse. Le problème est-il résolu ?",
         "options": ["Oui", "Non"],
         "endConversation": False
     }
