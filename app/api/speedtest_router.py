@@ -17,17 +17,3 @@ def get_debit_attendu(db: Session, num_ligne: str) -> float:
         {"numligne": num_ligne}
     ).fetchone()
     return float(result[0]) if result else 10.0
-
-@router.post("/verifier_speedtest")
-async def verifier_speedtest(data: SpeedtestResult, db: Session = Depends(get_db)):
-    debit_attendu = get_debit_attendu(db, data.num_ligne)
-    ecart = abs(data.download - debit_attendu)
-    connexion_normale = ecart < 3
-
-    return {
-        "connexion_normale": connexion_normale,
-        "debit_attendu": debit_attendu,
-        "download": data.download,
-        "upload": data.upload,
-        "ping": data.ping,
-    }

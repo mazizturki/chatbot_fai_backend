@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from app.api import router
+from app.api.speedtest_router import SpeedtestResult, get_debit_attendu
 from app.auth.jwt_handler import create_jwt_token, decode_jwt_token
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.config import DIALOGFLOW_PROJECT_ID
@@ -11,7 +13,7 @@ from app.services.ProblemeConnexion import handle_probleme_connexion
 from app.services.NumLigne import handle_verifier_ligne
 from app.services.FinDiscussion import handle_fin_discussion
 from google.cloud import dialogflow_v2 as dialogflow
-from app.core.session_memory import clear_session
+from app.core.session_memory import clear_session, get_param
 from app.services.MarqueModem import handle_demander_marque_modem
 from app.services.EtatModem import handle_demander_etat_modem
 from app.services.ServiceCommercial import handle_service_commercial
@@ -121,3 +123,24 @@ async def chat(query: Query,
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/session_param")
+async def session_param(session_id: str = Query(...), key: str = Query(...)):
+    value = get_param(session_id, key)
+    if value is None:
+        return {"error": f"Paramètre '{key}' non trouvé pour la session {session_id}"}
+    return {"value": value}
+
+@router.post("/verifier_speedtest")
+async def verifier_speedtest(data: SpeedtestResult, db: Session = Depends(get_db)):
+    debit_attendu = get_debit_attendu(db, data.num_ligne)
+    ecart = abs(data.download - debit_attendu)
+    connexion_normale = ecart < 3
+
+    return {
+        "connexion_normale": connexion_normale,
+        "debit_attendu": debit_attendu,
+        "download": data.download,
+        "upload": data.upload,
+        "ping": data.ping,
+    }
