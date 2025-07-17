@@ -23,8 +23,11 @@ async def handle_fournir_num_tel(data: dict, db: Session) -> dict:
         marque_modem = get_param(session_id, "marque_modem")
         type_probleme = get_param(session_id, "TypeProbleme")
         if numligne and marque_modem and type_probleme:
-            await diagnostic_probleme(data, db)
-
+            return{
+                "fulfillmentText" : (
+                    ""
+                )
+            }
         if not numligne:
             return {
                 "fulfillmentText": (

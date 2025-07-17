@@ -6,11 +6,19 @@ from app.utils.extract import extract_session_id
 async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
     print("handle_demander_marque_modem called with data:", data)
 
-    session_id = extract_session_id(data)
+    # Extraction de l'ID de session avec gestion des erreurs
+    try:
+        session_id = extract_session_id(data)
+    except Exception as e:
+        return {
+            "fulfillmentText": "❗ Erreur : impossible de récupérer l'identifiant de session. Veuillez réessayer.",
+            "endConversation": False
+        }
+
     parameters = dict(data["queryResult"]["parameters"])
     query_text = data["queryResult"].get("queryText", "").lower()
 
-    # Vérification de progression
+    # Vérification de la progression
     progression = get_progression(session_id)
     if progression.get("marque_ok"):
         marque_existante = get_param(session_id, "marque_modem")
@@ -19,18 +27,37 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
             "endConversation": False
         }
 
+    # Mappage des marques valides
+    marque_mapping = {
+        "huawei": "Huawei",
+        "tplink": "TPLink",
+        "nokia": "Nokia",
+        "zte": "ZTE",
+        "cisco": "Cisco",
+        "sagemcom": "Sagemcom",
+        "netgear": "Netgear",
+        "asus": "Asus",
+        "dlink": "D-Link"
+    }
+    valid_marques = list(marque_mapping.keys())
+    marques_affichables = list(marque_mapping.values())
+
     # Récupération de la marque
-    marque = parameters.get("marque_modem") or query_text
-    print(f"[DEBUG] Marque détectée : {marque}")
+    marque = parameters.get("marque_modem")
+    if not marque:
+        return {
+            "fulfillmentText": "❗ Aucune marque détectée. Veuillez préciser la marque de votre modem.",
+            "options": marques_affichables,
+            "endConversation": False
+        }
 
-    valid_marques = ["huawei", "tplink", "nokia", "zte", "cisco", "sagemcom", "netgear", "asus", "dlink"]
-
-    if marque and marque.lower() in valid_marques:
-        marque_clean = marque.capitalize()
+    # Validation de la marque
+    if marque.lower() in valid_marques:
+        marque_clean = marque_mapping[marque.lower()]
         store_param(session_id, "marque_modem", marque_clean)
         update_progression(session_id, "marque_ok", True)
 
-        # Vérifier si tous les autres paramètres sont prêts
+        # Vérification des autres paramètres
         numligne = get_param(session_id, "numligne")
         numtel = get_param(session_id, "numtel")
         type_probleme = get_param(session_id, "TypeProbleme")
@@ -41,7 +68,7 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
         if numligne and numtel and type_probleme:
             return await diagnostic_probleme(session_id, db)
 
-        # Messages en fonction de ce qui manque
+        # Messages pour les paramètres manquants
         if not numtel:
             return {
                 "fulfillmentText": (
@@ -74,11 +101,9 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
                 "options": ["lenteur", "coupure", "instabilité"],
                 "endConversation": False
             }
-
-    # Si la marque est invalide
-    marques_affichables = ["Huawei", "TPLink", "Nokia", "ZTE", "Cisco", "Sagemcom", "Netgear", "Asus", "D-Link"]
-    return {
-        "fulfillmentText": "❗ Marque non reconnue. Veuillez choisir une marque valide parmi les suivantes :",
-        "options": marques_affichables,
-        "endConversation": False
-    }
+    else:
+        return {
+            "fulfillmentText": "Veuillez choisir une marque valide parmi les suivantes :",
+            "options": marques_affichables,
+            "endConversation": False
+        }
