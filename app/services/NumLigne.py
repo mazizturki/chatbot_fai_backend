@@ -2,6 +2,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.crud.facture import nbr_factures, somme_montant_factures
 from app.core.session_memory import get_param, get_progression, store_param, update_progression
+from app.services.Diagnostique import diagnostic_probleme
 
 async def handle_verifier_ligne(data: dict, db: Session) -> dict:
     params = data.get("queryResult", {}).get("parameters", {})
@@ -19,10 +20,44 @@ async def handle_verifier_ligne(data: dict, db: Session) -> dict:
     # Si l'étape est déjà validée, ne pas recommencer
     if progression.get("num_ligne_ok"):
         ancien_num = get_param(session_id, "numligne")
-        return {
-            "fulfillmentText": f"Le numéro de ligne {ancien_num} est déjà enregistré. Poursuivons avec la suite du diagnostic.",
-            "endConversation": False
-        }
+        numtel = get_param(session_id, "numtel")
+        marque_modem = get_param(session_id, "marque_modem")
+        type_probleme = get_param(session_id, "TypeProbleme")
+
+        if numtel and marque_modem and type_probleme:
+            await diagnostic_probleme(data, db)
+
+        if not numtel:
+            return {
+                "fulfillmentText": (
+                    f"✅ Le numéro de ligne {ancien_num} est déjà enregistré.\n\n"
+                    f"📞 Merci de me fournir votre **numéro de téléphone** pour continuer le diagnostic."
+                ),
+                "endConversation": False
+            }
+
+        if not marque_modem:
+            return {
+                "fulfillmentText": (
+                    f"✅ Le numéro de ligne **{ancien_num}** et le numéro de téléphone **{numtel}** sont déjà enregistrés.\n\n"
+                    f"📶 Veuillez maintenant me communiquer la **marque de votre modem**."
+                ),
+                "options": ["Huawei", "TPLink", "Nokia", "ZTE", "Cisco", "Sagemcom", "Netgear", "Asus", "D-Link"],
+                "endConversation": False
+            }
+
+        if not type_probleme:
+            return {
+                "fulfillmentText": (
+                    f"✅ Les informations suivantes sont déjà enregistrées :\n"
+                    f"- 🔢 Numéro de ligne : **{ancien_num}**\n"
+                    f"- 📞 Numéro de téléphone : **{numtel}**\n"
+                    f"- 📶 Modem : **{marque_modem}**\n\n"
+                    f"📝 Merci de préciser **le type de problème de connexion** que vous rencontrez."
+                ),
+                "options": ["lenteur", "coupure", "instabilité"],
+                "endConversation": False
+            }
 
     if not numero:
         return {"fulfillmentText": "Merci de fournir votre numéro de ligne."}

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "chatbot-reclamation-fsi-grpn",
+  "private_key_id": "3e3987a0bab5c1aa7ec191ccd3768b6c9354eff2",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDFvWDhLN18l/bx\njf4LbumNHgkoswBaUAxC9MHhO1mdCGZ8sh9J5V/UHF0nYYGekcA82bhtcbnTToHE    \n2XFRjIO7mV45eqxPBve+FIwYJhUCP7efmaQjYt/YviVYU0lgmhVeAnl0t8GEeDBU\nxJXiqejH8XJmA3cGj7GgKvthsm7e16cEpvHN8u/SYkfB4oLRSrJS+vf7kuwKpil9\nFfD5cZ0oNedMvrCFBLCiVQLYC9WUD5lAPLZcHmZAn1+AFc1DAs4ipNohE7ntI52G\nrgRyGNq4yROTjqUjNnQAAU6vpuZpy3uaFEM8T8DDfpAxs14QAYNCOnkVQU8uLOCG\n30d2ylIxAgMBAAECggEAQtQXGuLz0/jz731Cn5CThCrjg4rDksI88qAPqlRJnAXL \nxVbZtjq8IU6YuQd+LB4sLySR7QMjf2On/eRTJPFtUAisTJbGB0tejTIaisrMDN+F\n6n2deIwhBPp2WpyDTw+kKwqBC85Sq7eG9g8ebOVpk7FpLUr8fg4wROZh4QnR6KO3\nYvYndPNfyBoglDqsrZfcy03/7OGpwRRO74pOxHHQwTqcZtXSXlcx+RFiu6koR7b4\nq9MQA2BtB6ereMd+qZTQKaPdiBjojylvppeaCWfdkYV1HFpYiFvkmWT4ztmbvCtm \nTSRfmJE2FNmqf4iAk6yNUzBXh1dS9wWbcG1xgnGT9QKBgQDmN4OMTHCAIwLwPsAX\nPZgdNS701eGFwqTuOSHsZ0u8Kx3I7vGkDow6cufXg6+qBHL8CBbsTxNtkiAIAepW\nlif0J845CjbiqHliUAUxN2Y9Z+rmrYNMpC5p+xjeztcHftJUnSb4qZI78UCl4SXF\nYBeH+kgV78ZNK6IGdAQMAmsvvwKBgQDb4rj2/3LHNXtftuCHVhwgXcMBgeKPbled\nz7joAI48B/pKnf3y1i0xGXwsh/HtzsAshNDCIOrtfhKRMnntIhVB56bSsnDhfBj7\np8CdrjvDVmdlr4f3XZDaR+07NcVJ0jba/7dXWHd4JyOPD7Brb2sbxhh5dQlXlPz+\ngRw8Up76DwKBgBqAGWx1AB4/6X6uOn5yYKg8DwOv+x3iogmqGfWUjmtCq1MN7lLs\nOcggof908SupB3NrmvfowlvCjl1dmxQMhNzeGCcIvfipXA+tFmvr7KD07V1Qa+TO\noWkhtmMvfCEowB1tWacWHfc4djCiEi7+OLc2YEXmK/WGKEiF4lFflecRAoGBAJLN\n1SX7OLttppgptdBFmnO1hdt8xzFxvwd6xv4GWPAVd3LX9tNpUTTFyhTFEq3t6noO\nln31kkPLd0P/ik3bAoxEyClFv32b5+YkgsIDsJzjFBdc0Q9DJdHGUcnFRZnawosG\nTXcAdor+vovmMqgX9E/Pu0lj7T/PFfYpZxuTIdbbAoGAUOyYweRNZoSGzdpl9qE4\n8juz6+RvDRX4SKN80BaQ5rpOSfISKGxR5eBD8oTwqRY+5mvBnHaA8bLKzK/Dkw0N\nJ9Yqck6xXssiN2CCdVBd+PvCRWAIji7KCP0Iu7WWdSHWOGxdEmdmvLkjoo7NS/+A\nEResshhBvf7KmMNhF7PBWNo=\n-----END PRIVATE KEY-----\n",
+  "client_email": "chatbot-sdk-service@chatbot-reclamation-fsi-grpn.iam.gserviceaccount.com",    
+  "client_id": "116747186698570637662",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/chatbot-sdk-service%40chatbot-reclamation-fsi-grpn.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
