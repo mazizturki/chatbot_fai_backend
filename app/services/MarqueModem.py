@@ -46,7 +46,7 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
     marque = parameters.get("marque_modem")
     if not marque:
         return {
-            "fulfillmentText": "❗ Aucune marque détectée. Veuillez préciser la marque de votre modem.",
+            "fulfillmentText": "Veuillez préciser la marque de votre modem.",
             "options": marques_affichables,
             "endConversation": False
         }
@@ -63,7 +63,9 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
         type_probleme = get_param(session_id, "TypeProbleme")
 
         print(f"[DEBUG] Infos actuelles - Ligne: {numligne}, Tel: {numtel}, Type: {type_probleme}")
-
+        print(f"[DEBUG] numligne: {numligne}, type: {type(numligne)}")
+        print(f"[DEBUG] numtel: {numtel}, type: {type(numtel)}")
+        print(f"[DEBUG] type_probleme: {type_probleme}, type: {type(type_probleme)}")
         # Diagnostic si tous les champs sont remplis
         if numligne and numtel and type_probleme:
             return await diagnostic_probleme(session_id, db)
@@ -103,7 +105,7 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
             }
     else:
         return {
-            "fulfillmentText": "Veuillez choisir une marque valide parmi les suivantes :",
+            "fulfillmentText": "❗ Aucune marque détectée. Veuillez choisir une marque valide parmi les suivantes :",
             "options": marques_affichables,
             "endConversation": False
         }
