@@ -23,7 +23,7 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
     if progression.get("marque_ok"):
         marque_existante = get_param(session_id, "marque_modem")
         return {
-            "fulfillmentText": f"✅ La marque du modem (**{marque_existante}**) est déjà enregistrée. Poursuivons avec la suite du diagnostic.",
+            "fulfillmentText": f"✅ La marque du modem ({marque_existante}) est déjà enregistrée. Poursuivons avec la suite du diagnostic.",
             "endConversation": False
         }
 
@@ -37,7 +37,8 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
         "sagemcom": "Sagemcom",
         "netgear": "Netgear",
         "asus": "Asus",
-        "dlink": "D-Link"
+        "dlink": "D-Link",
+        "autre": "Autre"
     }
     valid_marques = list(marque_mapping.keys())
     marques_affichables = list(marque_mapping.values())
@@ -74,9 +75,9 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
         if not numtel:
             return {
                 "fulfillmentText": (
-                    f"✅ Numéro de ligne : **{numligne}**\n"
-                    f"📶 Marque du modem : **{marque_clean}**\n\n"
-                    f"📞 Merci de me fournir votre **numéro de téléphone** pour continuer le diagnostic."
+                    f"✅ Numéro de ligne : {numligne}\n"
+                    f"📶 Marque du modem : {marque_clean}\n\n"
+                    f"📞 Merci de me fournir votre numéro de téléphone pour continuer le diagnostic."
                 ),
                 "endConversation": False
             }
@@ -84,9 +85,9 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
         if not numligne:
             return {
                 "fulfillmentText": (
-                    f"📞 Numéro de téléphone : **{numtel}**\n"
-                    f"📶 Marque du modem : **{marque_clean}**\n\n"
-                    f"🔢 Merci de me fournir votre **numéro de ligne** (abonnement) pour continuer."
+                    f"📞 Numéro de téléphone : {numtel}\n"
+                    f"📶 Marque du modem : {marque_clean}\n\n"
+                    f"☎️ Merci de me fournir le numéro relative à votre abonnement pour continuer."
                 ),
                 "endConversation": False
             }
@@ -95,10 +96,10 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
             return {
                 "fulfillmentText": (
                     f"✅ Informations enregistrées :\n"
-                    f"- 🔢 Numéro de ligne : **{numligne}**\n"
-                    f"- 📞 Téléphone : **{numtel}**\n"
-                    f"- 📶 Modem : **{marque_clean}**\n\n"
-                    f"📝 Merci de préciser **le type de problème** que vous rencontrez."
+                    f"- 🔢 Numéro de ligne : {numligne}\n"
+                    f"- 📞 Téléphone : {numtel}\n"
+                    f"- 📶 Modem : {marque_clean}\n\n"
+                    f"📝 Merci de préciser le type de problème que vous rencontrez."
                 ),
                 "options": ["lenteur", "coupure", "instabilité"],
                 "endConversation": False

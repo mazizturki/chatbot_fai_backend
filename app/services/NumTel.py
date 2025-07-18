@@ -25,14 +25,14 @@ async def handle_fournir_num_tel(data: dict, db: Session) -> dict:
         if numligne and marque_modem and type_probleme:
             return{
                 "fulfillmentText" : (
-                    ""
+                    "📞 Veuillez saisir votre numéro de portable "
                 )
             }
         if not numligne:
             return {
                 "fulfillmentText": (
-                    f"✅ Le numéro de téléphone **{ancien_num}** est déjà enregistré.\n\n"
-                    f"📞 Merci de me fournir le **numéro lié à votre abonnement** pour continuer le diagnostic."
+                    f"✅ Le numéro de téléphone {ancien_num} est déjà enregistré.\n\n"
+                    f"☎️ Veuillez saisir le numéro relative à votre abonnement pour continuer le diagnostic."
                 ),
                 "endConversation": False
             }
@@ -40,8 +40,8 @@ async def handle_fournir_num_tel(data: dict, db: Session) -> dict:
         if not marque_modem:
             return {
                 "fulfillmentText": (
-                    f"✅ Le numéro de téléphone **{ancien_num}** et le numéro de ligne **{numligne}** sont déjà enregistrés.\n\n"
-                    f"📶 Veuillez m’indiquer la **marque de votre modem** pour poursuivre l’analyse."
+                    f"✅ Le numéro de téléphone {ancien_num} et le numéro de ligne {numligne} sont déjà enregistrés.\n\n"
+                    f"📶 Veuillez m’indiquer la marque de votre modem pour poursuivre l’analyse."
                 ),
                 "options": ["Huawei", "TPLink", "Nokia", "ZTE", "Cisco", "Sagemcom", "Netgear", "Asus", "D-Link"],
                 "endConversation": False
@@ -51,10 +51,10 @@ async def handle_fournir_num_tel(data: dict, db: Session) -> dict:
             return {
                 "fulfillmentText": (
                     f"✅ Les informations suivantes sont déjà enregistrées :\n"
-                    f"- 📞 Numéro de téléphone : **{ancien_num}**\n"
-                    f"- 🔢 Numéro de ligne : **{numligne}**\n"
-                    f"- 📶 Modem : **{marque_modem}**\n\n"
-                    f"📝 Merci de préciser **le type de problème de connexion** que vous rencontrez."
+                    f"- 📞 Numéro de téléphone : {ancien_num}\n"
+                    f"- ☎️ Numéro de ligne : {numligne}\n"
+                    f"- 📶 Modem : {marque_modem}\n\n"
+                    f"📝 Merci de préciser le type de problème de connexion que vous rencontrez."
                 ),
                 "options": ["lenteur", "coupure", "instabilité"],
                 "endConversation": False

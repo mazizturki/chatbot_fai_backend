@@ -26,17 +26,21 @@ async def diagnostic_probleme(session_id: str, db: Session) -> dict:
     # Cas lenteur → test de vitesse
     if type_probleme == "lenteur":
         message_intro = f"Lancement du test de vitesse pour la ligne {numligne}... Veuillez patienter.\n"
-        speed_data = await run_speedtest(numligne, db)
-        if speed_data is None:
-            return {"fulfillmentText": "❌ Impossible d'effectuer le test de vitesse pour le moment."}
-
-        download_mbps = speed_data.get("download")
-        upload_mbps = speed_data.get("upload")
-        ping_ms = speed_data.get("ping")
-        debit_attendu = speed_data.get("debit_attendu")
-
-        if None in [download_mbps, upload_mbps, ping_ms, debit_attendu]:
-            return {"fulfillmentText": "❌ Le test de vitesse a échoué. Données incomplètes."}
+        max_retries = 3
+        for attempt in range(max_retries):
+            speed_data = await run_speedtest(numligne, db)
+            if speed_data is None:
+                if attempt == max_retries - 1:
+                    return {"fulfillmentText": "❌ Échec du test de vitesse après plusieurs tentatives."}
+                continue
+            download_mbps = speed_data.get("download")
+            upload_mbps = speed_data.get("upload")
+            ping_ms = speed_data.get("ping")
+            debit_attendu = speed_data.get("debit_attendu")
+            if None not in [download_mbps, upload_mbps, ping_ms, debit_attendu]:
+                break
+        else:
+            return {"fulfillmentText": "❌ Données incomplètes après plusieurs tentatives."}
 
         difference = debit_attendu - download_mbps
         print(f"[DEBUG] Download: {download_mbps} Mbps | Upload: {upload_mbps} Mbps | Ping: {ping_ms} ms | Attendu: {debit_attendu} Mbps | Écart: {difference} Mbps")
