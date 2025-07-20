@@ -44,11 +44,8 @@ async def handle_demander_etat_modem(data: dict, db: Session) -> dict:
             "fulfillmentText": "Merci de m’indiquer l’état des voyants de votre modem.",
             "options": [
                 "Le voyant ADSL clignote",
-                "Le voyant Internet est rouge",
                 "Le voyant Internet est éteint",
                 "Le voyant WLAN est éteint",
-                "Tous les voyants sont allumés",
-                "Tous les voyants sont éteints"
             ],
             "endConversation": False
         }
