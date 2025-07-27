@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import httpx
+from starlette.concurrency import run_in_threadpool
 
 from app.auth.jwt_handler import create_jwt_token, decode_jwt_token
 from app.core.config import DIALOGFLOW_PROJECT_ID, FLASK_MAINTENANCE_URL, FLASK_API_KEY
@@ -52,7 +53,7 @@ class Query(BaseModel):
 
 def detect_intent(project_id: str, session_id: str, text: str, language_code: str = "fr"):
     """
-    Interroge Dialogflow pour détecter l'intention.
+    Fonction synchrone qui interroge Dialogflow pour détecter l'intention.
     """
     session_client = dialogflow.SessionsClient()
     session = session_client.session_path(project_id, session_id)
@@ -60,6 +61,13 @@ def detect_intent(project_id: str, session_id: str, text: str, language_code: st
     query_input = dialogflow.QueryInput(text=text_input)
     response = session_client.detect_intent(session=session, query_input=query_input)
     return response.query_result
+
+
+async def detect_intent_async(project_id: str, session_id: str, text: str, language_code: str = "fr"):
+    """
+    Wrapper async pour la fonction synchrone detect_intent.
+    """
+    return await run_in_threadpool(detect_intent, project_id, session_id, text, language_code)
 
 
 intent_handlers = {
@@ -106,28 +114,29 @@ async def update_maintenance(isActive: bool, message: str):
         r = await client.post(
             FLASK_MAINTENANCE_URL,
             json={"isActive": isActive, "message": message},
-            headers={"X-API-Key": FLASK_API_KEY}
+            headers={"X-API-Key": FLASK_API_KEY},
         )
         if r.status_code == 200:
             return r.json()
         else:
-            raise HTTPException(status_code=r.status_code, detail="Erreur mise à jour maintenance")
+            try:
+                error_detail = r.json()
+            except Exception:
+                error_detail = r.text
+            raise HTTPException(status_code=r.status_code, detail=error_detail)
 
 
 @app.middleware("http")
 async def maintenance_middleware(request: Request, call_next):
-    """
-    Middleware qui bloque les requêtes vers /chat si maintenance active.
-    """
-    if request.url.path == "/chat" or request.url.path.startswith("/chat/"):
+    if request.method == "POST" and request.url.path == "/chat":
         status = await get_maintenance_status()
         if status.get("isActive", False):
             return JSONResponse(
                 status_code=503,
                 content={
                     "message": status.get("message", "Maintenance en cours..."),
-                    "maintenance": True
-                }
+                    "maintenance": True,
+                },
             )
     response = await call_next(request)
     return response
@@ -137,14 +146,14 @@ async def maintenance_middleware(request: Request, call_next):
 async def chat(
     query: Query,
     db: Session = Depends(get_db),
-    payload: dict = Depends(verify_jwt_token)
+    payload: dict = Depends(verify_jwt_token),
 ):
     """
     Endpoint chatbot qui détecte l'intent avec Dialogflow et appelle le handler correspondant.
     """
     try:
         session_id = payload.get("jti")
-        result = detect_intent(DIALOGFLOW_PROJECT_ID, session_id, query.text)
+        result = await detect_intent_async(DIALOGFLOW_PROJECT_ID, session_id, query.text)
         intent_name = result.intent.display_name
         params_dict = dict(result.parameters)
 
