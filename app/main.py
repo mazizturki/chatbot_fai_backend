@@ -125,7 +125,8 @@ async def update_maintenance(update: MaintenanceUpdate):
 
 @app.middleware("http")
 async def maintenance_middleware(request: Request, call_next):
-    if request.method == "POST" and request.url.path.startswith("/chat"):
+    # Vérifier si c'est une requête vers /chat (pour toutes les méthodes)
+    if request.url.path.startswith("/chat"):
         status = await get_maintenance_status()
         if status.get("isActive", False):
             return JSONResponse(
