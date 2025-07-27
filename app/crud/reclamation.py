@@ -8,8 +8,6 @@ def creer_reclamation(db: Session, numligne: str, numtel: str, probleme: str, et
     current_year = datetime.now().year
     date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
-    # Vérification des paramètres
     reclamation = Reclamation(
         num_ligne=numligne,
         num_tel=numtel,

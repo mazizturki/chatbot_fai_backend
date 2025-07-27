@@ -5,7 +5,7 @@ import time
 session_memory = defaultdict(dict)
 session_expiry = {}
 
-SESSION_TTL = 270  # Durée de vie des sessions en secondes
+SESSION_TTL = 270  
 
 def store_param(session_id: str, key: str, value):
     session_memory[session_id][key] = value

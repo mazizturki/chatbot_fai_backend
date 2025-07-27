@@ -97,29 +97,26 @@ async def get_maintenance_status():
         try:
             r = await client.get(FLASK_MAINTENANCE_URL, timeout=5.0)
             
-            # Cas 1 : L'API répond avec un JSON valide (200 ou autre)
             try:
                 api_response = r.json()
                 message = api_response.get("message", "Maintenance en cours")
                 return {
-                    "isActive": api_response.get("isActive", True),  # Blocage par défaut si absent
-                    "message": message  # Message original ou valeur par défaut
+                    "isActive": api_response.get("isActive", True),  
+                    "message": message  
                 }
             
-            # Cas 2 : L'API répond mais avec un JSON invalide
             except ValueError:
                 logger.error(f"API Maintenance a renvoyé un JSON invalide : {r.text}")
                 return {
                     "isActive": True,
-                    "message": r.text  # Retourne le texte brut si le JSON est illisible
+                    "message": r.text  
                 }
 
-        # Cas 3 : Erreur réseau/timeout
         except Exception as e:
             logger.error(f"Erreur de connexion à l'API Maintenance : {str(e)}")
             return {
                 "isActive": True,
-                "message": f"Service indisponible (erreur: {str(e)})"  # Message technique + original
+                "message": f"Service indisponible (erreur: {str(e)})"  
             }
         
 @app.get("/api/maintenance")
@@ -151,11 +148,10 @@ async def update_maintenance(update: MaintenanceUpdate):
 
 @app.middleware("http")
 async def maintenance_middleware(request: Request, call_next):
-    # Bloquer TOUTES les requêtes vers /chat si maintenance active
     if request.url.path.startswith("/chat"):
         maintenance_status = await get_maintenance_status()
         
-        if maintenance_status.get("isActive", True):  # Par défaut, bloquer si erreur
+        if maintenance_status.get("isActive", True):  
             return JSONResponse(
                 status_code=503,
                 content={

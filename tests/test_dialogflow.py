@@ -16,4 +16,4 @@ def test_dialogflow():
     print("➡️ Réponse :", response.query_result.fulfillment_text)
 
     assert response.query_result.fulfillment_text is not None
-    assert response.query_result.intent.display_name != ""  # le nom de l'intent doit être détecté
+    assert response.query_result.intent.display_name != ""  

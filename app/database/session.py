@@ -5,7 +5,6 @@ from .base import Base
 import os
 import logging
 
-# Configuration du logging pour diagnostiquer les erreurs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -13,11 +12,9 @@ class AppEnvironment(Enum):
     DEV = "dev"
     PROD = "prod"
 
-# Déterminer l'environnement
 ENVIRONMENT = os.getenv("APP_ENV", AppEnvironment.DEV.value)
 logger.info(f"Environnement détecté : {ENVIRONMENT}")
 
-# URLs de la base de données
 DATABASE_URLS = {
     AppEnvironment.DEV.value: "postgresql://postgres:14774368@localhost:5432/fsi",
     AppEnvironment.PROD.value: os.getenv(
@@ -26,11 +23,9 @@ DATABASE_URLS = {
     )
 }
 
-# Sélection de l'URL
 DATABASE_URL = DATABASE_URLS[ENVIRONMENT]
 logger.info(f"URL de la base de données : {DATABASE_URL}")
 
-# Configuration de SQLAlchemy
 try:
     engine = create_engine(DATABASE_URL, pool_pre_ping=True)
     logger.info("Connexion à la base de données établie avec succès")

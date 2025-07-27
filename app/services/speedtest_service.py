@@ -1,5 +1,3 @@
-# app/services/speedtest_service.py
-
 import speedtest
 from sqlalchemy.orm import Session
 from app.models.models import LigneTelephonique
@@ -21,7 +19,6 @@ async def run_speedtest(numligne: str, db: Session) -> dict:
 
         print(f"[DEBUG] Résultats speedtest - Download: {download_mbps} Mbps, Upload: {upload_mbps} Mbps, Ping: {ping} ms")
 
-        # Récupération du débit attendu
         debit_attendu = get_debit_attendu_par_ligne(db, numligne)
 
         return {

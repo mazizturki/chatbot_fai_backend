@@ -25,7 +25,6 @@ async def handle_verifier_ligne(data: dict, db: Session) -> dict:
             result = db.execute(query, {"numero": numero}).fetchone()
 
             if not result:
-                # Ne pas stocker le numéro ni marquer l’étape comme validée si inexistant
                 return {
                     "fulfillmentText": f"Le numéro {numero} est inexistant. Merci de saisir un numéro valide."
                 }

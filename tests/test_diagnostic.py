@@ -7,9 +7,8 @@ from app.core.session_memory import store_param
 @pytest.mark.asyncio
 async def test_diagnostic_lenteur(monkeypatch: pytest.MonkeyPatch):
     session_id = "test-session"
-    db = None  # utiliser une session mockée dans un vrai test
+    db = None  
 
-    # Simuler les données stockées en mémoire
     store_param(session_id, "TypeProbleme", "lenteur")
     store_param(session_id, "numligne", "74120253")
     store_param(session_id, "numtel", "12345678")

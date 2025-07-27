@@ -6,7 +6,6 @@ from app.models.models import Reclamation
 from app.models.models import LigneTelephonique
 from datetime import datetime
 
-# Base temporaire SQLite en mémoire
 DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
@@ -21,7 +20,6 @@ def db_session():
     Base.metadata.drop_all(bind=engine)
 
 def test_reclamation_model(db_session):
-    # Créer d'abord une ligne téléphonique (clé étrangère)
     ligne = LigneTelephonique(
         num_ligne="74120253",
         id_client="C/2025/000001",
@@ -31,7 +29,6 @@ def test_reclamation_model(db_session):
     db_session.add(ligne)
     db_session.commit()
 
-    # Créer une réclamation associée
     reclamation = Reclamation(
         id_reclamation="R/2025/000001",
         num_ligne="74120253",
@@ -44,7 +41,6 @@ def test_reclamation_model(db_session):
     db_session.add(reclamation)
     db_session.commit()
 
-    # Vérification
     result = db_session.query(Reclamation).filter_by(id_reclamation="R/2025/000001").first()
     assert result is not None
     assert result.num_ligne == "74120253"

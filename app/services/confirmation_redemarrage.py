@@ -32,7 +32,6 @@ async def handle_confirmation_redemarrage(data: dict, db: Session) -> dict:
             "endConversation": True
         }
 
-    # Si la réponse est ambiguë
     return {
         "fulfillmentText": "Je n’ai pas compris votre réponse. Le problème est-il résolu ?",
         "options": ["Oui", "Non"],

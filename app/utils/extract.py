@@ -8,7 +8,6 @@ def extract_param(params: dict, key: str, session_id: str) -> str:
     """
     value = params.get(key)
     
-    # Si RepeatedComposite ou liste
     if hasattr(value, "__iter__") and not isinstance(value, str):
         if len(value) > 0:
             value = str(value[0])
@@ -17,10 +16,8 @@ def extract_param(params: dict, key: str, session_id: str) -> str:
     elif isinstance(value, str):
         value = value.strip()
     else:
-        # Si rien dans les paramètres, on tente la mémoire
         value = get_param(session_id, key) or ""
 
-    # Stocker si valeur présente
     if value:
         store_param(session_id, key, value)
 

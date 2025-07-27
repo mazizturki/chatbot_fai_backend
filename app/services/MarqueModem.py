@@ -6,7 +6,6 @@ from app.utils.extract import extract_session_id
 async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
     print("handle_demander_marque_modem called with data:", data)
 
-    # Extraction de l'ID de session avec gestion des erreurs
     try:
         session_id = extract_session_id(data)
     except Exception as e:
@@ -27,7 +26,6 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
             "endConversation": False
         }
 
-    # Mappage des marques valides
     marque_mapping = {
         "huawei": "Huawei",
         "tplink": "TPLink",
@@ -43,7 +41,6 @@ async def handle_demander_marque_modem(data: dict, db: Session) -> dict:
     valid_marques = list(marque_mapping.keys())
     marques_affichables = list(marque_mapping.values())
 
-    # Récupération de la marque
     marque = parameters.get("marque_modem") or parameters.get("marque")
     if not marque:
         return {

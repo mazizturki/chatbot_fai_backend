@@ -1,5 +1,3 @@
-# app/services/service_commercial.py
-
 from sqlalchemy.orm import Session
 from app.core.session_memory import store_param
 from app.utils.extract import extract_param, extract_session_id

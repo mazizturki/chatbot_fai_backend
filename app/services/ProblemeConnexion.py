@@ -53,7 +53,6 @@ async def handle_probleme_connexion(data: dict, db: Session) -> Dict:
 
     update_progression(session_id, "probleme_ok", True)
 
-    # Construction message
     response_text = f"Suite à un problème de {type_probleme}"
     if type_connexion:
         response_text += f" sur votre {type_connexion}"
