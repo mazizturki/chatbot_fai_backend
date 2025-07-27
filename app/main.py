@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import httpx
 
 from app.auth.jwt_handler import create_jwt_token, decode_jwt_token
-from app.core.config import DIALOGFLOW_PROJECT_ID
+from app.core.config import DIALOGFLOW_PROJECT_ID, FLASK_MAINTENANCE_URL, FLASK_API_KEY
 from app.database.session import get_db
 from app.services.NumTel import handle_fournir_num_tel
 from app.services.ProblemeConnexion import handle_probleme_connexion
@@ -18,33 +18,42 @@ from app.services.ServiceCommercial import handle_service_commercial
 from app.services.confirmation_redemarrage import handle_confirmation_redemarrage
 from app.core.session_memory import clear_session
 from google.cloud import dialogflow_v2 as dialogflow
-from app.core.config import FLASK_MAINTENANCE_URL, FLASK_API_KEY
 
 app = FastAPI()
 security = HTTPBearer()
 
-# ✅ Vérification du token JWT
+
 def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Vérifie le token JWT fourni dans l'en-tête Authorization.
+    """
     try:
         token = credentials.credentials
         return decode_jwt_token(token)
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
 
+
 @app.get("/generate_token")
 async def generate_token():
+    """
+    Génère un token JWT.
+    """
     try:
         token = create_jwt_token()
         return {"token": token}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ✅ Classe requête
+
 class Query(BaseModel):
     text: str
 
-# ✅ Fonction Dialogflow
-def detect_intent(project_id, session_id, text, language_code="fr"):
+
+def detect_intent(project_id: str, session_id: str, text: str, language_code: str = "fr"):
+    """
+    Interroge Dialogflow pour détecter l'intention.
+    """
     session_client = dialogflow.SessionsClient()
     session = session_client.session_path(project_id, session_id)
     text_input = dialogflow.TextInput(text=text, language_code=language_code)
@@ -52,7 +61,7 @@ def detect_intent(project_id, session_id, text, language_code="fr"):
     response = session_client.detect_intent(session=session, query_input=query_input)
     return response.query_result
 
-# ✅ Mapping intents
+
 intent_handlers = {
     "ProblemeConnexion": handle_probleme_connexion,
     "FournirNumLigne": handle_verifier_ligne,
@@ -64,50 +73,75 @@ intent_handlers = {
     "ServiceCommercial": handle_service_commercial,
 }
 
-# ✅ Récupérer état maintenance depuis Flask
+
 async def get_maintenance_status():
+    """
+    Récupère le statut de maintenance depuis l'API Flask.
+    """
     async with httpx.AsyncClient() as client:
         try:
             r = await client.get(FLASK_MAINTENANCE_URL, timeout=5.0)
             if r.status_code == 200:
                 return r.json()
             else:
-                # Si Flask renvoie autre chose (ex: erreur serveur)
                 return {"isActive": False, "message": "Erreur API Maintenance"}
         except httpx.RequestError:
-            # Si l'API Flask est down
             return {"isActive": False, "message": "Impossible de joindre l'API Maintenance"}
+
 
 @app.get("/api/maintenance")
 async def get_maintenance():
+    """
+    Endpoint pour récupérer le statut maintenance (proxy vers Flask).
+    """
     return await get_maintenance_status()
+
 
 @app.post("/api/maintenance")
 async def update_maintenance(isActive: bool, message: str):
+    """
+    Endpoint pour mettre à jour le statut maintenance (proxy vers Flask).
+    """
     async with httpx.AsyncClient() as client:
         r = await client.post(
             FLASK_MAINTENANCE_URL,
             json={"isActive": isActive, "message": message},
             headers={"X-API-Key": FLASK_API_KEY}
         )
-        return r.json()
+        if r.status_code == 200:
+            return r.json()
+        else:
+            raise HTTPException(status_code=r.status_code, detail="Erreur mise à jour maintenance")
 
-# ✅ Middleware → Bloque /chat si maintenance active
+
 @app.middleware("http")
 async def maintenance_middleware(request: Request, call_next):
-    if request.url.path.startswith("/chat"):
+    """
+    Middleware qui bloque les requêtes vers /chat si maintenance active.
+    """
+    if request.url.path == "/chat" or request.url.path.startswith("/chat/"):
         status = await get_maintenance_status()
         if status.get("isActive", False):
             return JSONResponse(
                 status_code=503,
-                content={"message": status.get("message", "Maintenance en cours..."),
-                         "maintenance": True}
+                content={
+                    "message": status.get("message", "Maintenance en cours..."),
+                    "maintenance": True
+                }
             )
-    return await call_next(request)
+    response = await call_next(request)
+    return response
 
-# ✅ Endpoint chatbot
+
 @app.post("/chat")
-async def chat(query: Query, db: Session = Depends(get_db), payload: dict = Depends(verify_jwt_token)):
+async def chat(
+    query: Query,
+    db: Session = Depends(get_db),
+    payload: dict = Depends(verify_jwt_token)
+):
+    """
+    Endpoint chatbot qui détecte l'intent avec Dialogflow et appelle le handler correspondant.
+    """
     try:
         session_id = payload.get("jti")
         result = detect_intent(DIALOGFLOW_PROJECT_ID, session_id, query.text)
@@ -120,15 +154,15 @@ async def chat(query: Query, db: Session = Depends(get_db), payload: dict = Depe
                 "queryResult": {
                     "parameters": params_dict,
                     "intent": {"displayName": intent_name},
-                    "queryText": query.text
+                    "queryText": query.text,
                 },
-                "session": session_id
+                "session": session_id,
             }
             response = await handler(data, db)
             reply = {
                 "fulfillmentText": response.get("fulfillmentText", "Pas de réponse."),
                 "options": response.get("options", []),
-                "endConversation": response.get("endConversation", False)
+                "endConversation": response.get("endConversation", False),
             }
             if reply["endConversation"]:
                 clear_session(session_id)
