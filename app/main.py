@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import httpx
 from starlette.concurrency import run_in_threadpool
+import logging
 
 from app.auth.jwt_handler import create_jwt_token, decode_jwt_token
 from app.core.config import DIALOGFLOW_PROJECT_ID, FLASK_MAINTENANCE_URL, FLASK_API_KEY
@@ -20,9 +21,17 @@ from app.services.confirmation_redemarrage import handle_confirmation_redemarrag
 from app.core.session_memory import clear_session
 from google.cloud import dialogflow_v2 as dialogflow
 
+logger = logging.getLogger("uvicorn.error")
+
 app = FastAPI()
 security = HTTPBearer()
 
+class MaintenanceUpdate(BaseModel):
+    isActive: bool
+    message: str
+
+class Query(BaseModel):
+    text: str
 
 def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
@@ -33,7 +42,6 @@ def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Depends(securit
         return decode_jwt_token(token)
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
-
 
 @app.get("/generate_token")
 async def generate_token():
@@ -46,11 +54,6 @@ async def generate_token():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-class Query(BaseModel):
-    text: str
-
-
 def detect_intent(project_id: str, session_id: str, text: str, language_code: str = "fr"):
     """
     Fonction synchrone qui interroge Dialogflow pour détecter l'intention.
@@ -62,13 +65,11 @@ def detect_intent(project_id: str, session_id: str, text: str, language_code: st
     response = session_client.detect_intent(session=session, query_input=query_input)
     return response.query_result
 
-
 async def detect_intent_async(project_id: str, session_id: str, text: str, language_code: str = "fr"):
     """
     Wrapper async pour la fonction synchrone detect_intent.
     """
     return await run_in_threadpool(detect_intent, project_id, session_id, text, language_code)
-
 
 intent_handlers = {
     "ProblemeConnexion": handle_probleme_connexion,
@@ -80,7 +81,6 @@ intent_handlers = {
     "ConfirmationRedemarrage": handle_confirmation_redemarrage,
     "ServiceCommercial": handle_service_commercial,
 }
-
 
 async def get_maintenance_status():
     """
@@ -96,7 +96,6 @@ async def get_maintenance_status():
         except httpx.RequestError:
             return {"isActive": False, "message": "Impossible de joindre l'API Maintenance"}
 
-
 @app.get("/api/maintenance")
 async def get_maintenance():
     """
@@ -104,16 +103,15 @@ async def get_maintenance():
     """
     return await get_maintenance_status()
 
-
 @app.post("/api/maintenance")
-async def update_maintenance(isActive: bool, message: str):
+async def update_maintenance(update: MaintenanceUpdate):
     """
     Endpoint pour mettre à jour le statut maintenance (proxy vers Flask).
     """
     async with httpx.AsyncClient() as client:
         r = await client.post(
             FLASK_MAINTENANCE_URL,
-            json={"isActive": isActive, "message": message},
+            json=update.dict(),
             headers={"X-API-Key": FLASK_API_KEY},
         )
         if r.status_code == 200:
@@ -125,10 +123,9 @@ async def update_maintenance(isActive: bool, message: str):
                 error_detail = r.text
             raise HTTPException(status_code=r.status_code, detail=error_detail)
 
-
 @app.middleware("http")
 async def maintenance_middleware(request: Request, call_next):
-    if request.method == "POST" and request.url.path == "/chat":
+    if request.method == "POST" and request.url.path.startswith("/chat"):
         status = await get_maintenance_status()
         if status.get("isActive", False):
             return JSONResponse(
@@ -140,7 +137,6 @@ async def maintenance_middleware(request: Request, call_next):
             )
     response = await call_next(request)
     return response
-
 
 @app.post("/chat")
 async def chat(
@@ -179,4 +175,5 @@ async def chat(
         else:
             return {"fulfillmentText": result.fulfillment_text}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Erreur dans /chat : {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Erreur interne serveur")
