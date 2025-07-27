@@ -85,16 +85,21 @@ intent_handlers = {
 async def get_maintenance_status():
     """
     Récupère le statut de maintenance depuis l'API Flask.
+    Retourne {"isActive": True} par défaut en cas d'erreur.
     """
     async with httpx.AsyncClient() as client:
         try:
             r = await client.get(FLASK_MAINTENANCE_URL, timeout=5.0)
+            
             if r.status_code == 200:
                 return r.json()
             else:
-                return {"isActive": False, "message": "Erreur API Maintenance"}
-        except httpx.RequestError:
-            return {"isActive": False, "message": "Impossible de joindre l'API Maintenance"}
+                logger.error(f"Erreur API Maintenance: {r.status_code} - {r.text}")
+                return {"isActive": True, "message": "Maintenance en cours (erreur API)"}
+                
+        except Exception as e:
+            logger.error(f"Impossible de joindre l'API Maintenance: {str(e)}")
+            return {"isActive": True, "message": "Maintenance en cours (service indisponible)"}
 
 @app.get("/api/maintenance")
 async def get_maintenance():
@@ -125,19 +130,20 @@ async def update_maintenance(update: MaintenanceUpdate):
 
 @app.middleware("http")
 async def maintenance_middleware(request: Request, call_next):
-    # Vérifier si c'est une requête vers /chat (pour toutes les méthodes)
+    # Bloquer TOUTES les requêtes vers /chat si maintenance active
     if request.url.path.startswith("/chat"):
-        status = await get_maintenance_status()
-        if status.get("isActive", False):
+        maintenance_status = await get_maintenance_status()
+        
+        if maintenance_status.get("isActive", True):  # Par défaut, bloquer si erreur
             return JSONResponse(
                 status_code=503,
                 content={
-                    "message": status.get("message", "Maintenance en cours..."),
+                    "message": maintenance_status.get("message", "Maintenance en cours"),
                     "maintenance": True,
                 },
             )
-    response = await call_next(request)
-    return response
+    
+    return await call_next(request)
 
 @app.post("/chat")
 async def chat(
