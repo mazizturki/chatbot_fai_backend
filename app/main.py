@@ -87,20 +87,41 @@ async def get_maintenance_status():
     Récupère le statut de maintenance depuis l'API Flask.
     Retourne {"isActive": True} par défaut en cas d'erreur.
     """
+async def get_maintenance_status():
+    """
+    Récupère le statut de maintenance depuis l'API Flask.
+    - Retourne toujours le message original de l'API, même en cas d'erreur.
+    - Par défaut, considère la maintenance comme active si l'API échoue.
+    """
     async with httpx.AsyncClient() as client:
         try:
             r = await client.get(FLASK_MAINTENANCE_URL, timeout=5.0)
             
-            if r.status_code == 200:
-                return r.json()
-            else:
-                logger.error(f"Erreur API Maintenance: {r.status_code} - {r.text}")
-                return {"isActive": True, "message": "Maintenance en cours (erreur API)"}
-                
-        except Exception as e:
-            logger.error(f"Impossible de joindre l'API Maintenance: {str(e)}")
-            return {"isActive": True, "message": "Maintenance en cours (service indisponible)"}
+            # Cas 1 : L'API répond avec un JSON valide (200 ou autre)
+            try:
+                api_response = r.json()
+                message = api_response.get("message", "Maintenance en cours")
+                return {
+                    "isActive": api_response.get("isActive", True),  # Blocage par défaut si absent
+                    "message": message  # Message original ou valeur par défaut
+                }
+            
+            # Cas 2 : L'API répond mais avec un JSON invalide
+            except ValueError:
+                logger.error(f"API Maintenance a renvoyé un JSON invalide : {r.text}")
+                return {
+                    "isActive": True,
+                    "message": r.text  # Retourne le texte brut si le JSON est illisible
+                }
 
+        # Cas 3 : Erreur réseau/timeout
+        except Exception as e:
+            logger.error(f"Erreur de connexion à l'API Maintenance : {str(e)}")
+            return {
+                "isActive": True,
+                "message": f"Service indisponible (erreur: {str(e)})"  # Message technique + original
+            }
+        
 @app.get("/api/maintenance")
 async def get_maintenance():
     """
